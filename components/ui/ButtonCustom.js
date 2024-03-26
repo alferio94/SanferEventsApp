@@ -1,8 +1,8 @@
 import { Pressable, StyleSheet, Text, View } from "react-native"
 import { GlobalStyles } from "../../constants/styles"
-export const ButtonCustom = ({title, onPress}) => {
+export const ButtonCustom = ({title, onPress, style}) => {
   return (
-    <Pressable style={({pressed}) => pressed ? [styles.button, styles.buttonPressed] : styles.button} onPress={onPress}>
+    <Pressable style={({pressed}) => pressed ? [styles.button,style, styles.buttonPressed] : [styles.button, style]} onPress={onPress}>
       <View >
         <Text style={styles.buttonText}>{title}</Text>
       </View>

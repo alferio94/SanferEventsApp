@@ -1,48 +1,30 @@
 import { createContext, useState } from "react";
 
 export const AuthContext = createContext({
-    userToken:null,
+    user:null,
     login: (id) => {},
     logout: (id) => {}
 });
 
 function AuthContextProvider({children}){
-    const [userToken, setUserToken] = useState(null);
-    function login(){
-        setUserToken('213yu21r63128y3')
+    const [user, setUser] = useState(null);
+    function login(userData){
+        setUser(userData)
     }
     function logout(){
-        setUserToken(null)
+        setUser(null)
     }
 
     const value ={
-        userToken:userToken,
-        login:login
+        user:user,
+        login:login,
+        logout:logout
     }
 
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
-/* function AuthContextProvider({children}){
 
-    const [favoriteMeals, setFavoriteMEals] = useState('Text')
-
-    function addFavorite(id){
-        setFavoriteMEals((currentFavIds) => [...currentFavIds, id]);
-    }
-
-    function removeFavorite(id){
-        setFavoriteMEals((currentFavIds) => currentFavIds.filter(mealId => mealId !== id ))
-    }
-
-    const value ={
-        ids:favoriteMeals,
-        addFavorite:addFavorite,
-        removeFavorite:removeFavorite
-    }
-
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-} */
 
 export default AuthContextProvider

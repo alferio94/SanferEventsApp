@@ -9,7 +9,7 @@ const AppNav = () => {
     const authCntx = useContext(AuthContext);
     return (
         <NavigationContainer>
-            {authCntx.userToken ? <AppStack /> : <AuthStack />}
+            {authCntx.user ? <AppStack /> : <AuthStack />}
         </NavigationContainer>
     )
 }

@@ -1,35 +1,38 @@
-import { Pressable, Text, View, Image, StyleSheet, Platform } from "react-native"
-import { GlobalStyles } from "../../constants/styles";
-import { URL } from "../../constants/url";
-import { useNavigation } from "@react-navigation/native";
+import { Pressable, Text, View, Image, StyleSheet, Platform,Linking } from "react-native"
+import { GlobalStyles } from "../../../constants/styles"
+import { ButtonCustom } from "../../ui/ButtonCustom";
 
-const EventItem = ({ id, banner, nombre, fecha_inicio }) => {
-    const navigation = useNavigation()
-    function pressHandler() {
-        navigation.navigate('eventDetails', { eventId: id })
+const RestaurantCard = ({item}) => {
+    const {direccion, foto, mapa, telefono, nombre} = item
+    function mapHandler(){
+        Linking.openURL(mapa);
+    }
+    function callHandler(){
+        const url = `tel:${telefono}`
+        Linking.openURL(url);
     }
     return (
         <View style={styles.eventItem}>
-            <Pressable android_ripple={{ color: '#ccc' }} style={({ pressed }) => [pressed && styles.buttonPressed]} onPress={pressHandler}>
                 <View style={styles.innerContainer}>
                     <View>
-                        <Image source={{ uri: `${URL}${banner}` }} style={styles.image} />
+                        <Image source={{ uri: `${foto}` }} style={styles.image} />
                         <Text style={[styles.textBase, styles.title]}>{nombre}</Text>
-                        <Text style={[styles.textBase, styles.date]}>{fecha_inicio.slice(0, 10)}</Text>
+                    </View>
+                    <View style={styles.buttonContainer}>
+                        <ButtonCustom title='Mostrar ubicacion' onPress={mapHandler} />
+                        <ButtonCustom title='Llamar' style={styles.callButton} onPress={callHandler} />
                     </View>
                 </View>
-            </Pressable>
         </View>
-
     )
 }
 
-export default EventItem;
+export default RestaurantCard
 
 const styles = StyleSheet.create({
     eventItem: {
         margin: 14,
-        elevation: 6,
+        elevation: 10,
         shadowColor: '#000',
         shadowOpacity: 0.35,
         shadowOffset: { width: 0, height: 2 },
@@ -72,4 +75,11 @@ const styles = StyleSheet.create({
     buttonPressed: {
         opacity: 0.75
     },
+    buttonContainer:{
+        flexDirection:'row',
+        justifyContent: 'space-around'
+    },  
+    callButton:{
+        backgroundColor:'#498AEB'
+    }
 })
