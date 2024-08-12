@@ -3,7 +3,7 @@ import { GlobalStyles } from "../../constants/styles";
 import { URL } from "../../constants/url";
 import { useNavigation } from "@react-navigation/native";
 
-const EventItem = ({ id, banner, nombre, fecha_inicio }) => {
+const EventItem = ({ id, banner, name, startDate }) => {
     const navigation = useNavigation()
     function pressHandler() {
         navigation.navigate('eventDetails', { eventId: id })
@@ -14,8 +14,8 @@ const EventItem = ({ id, banner, nombre, fecha_inicio }) => {
                 <View style={styles.innerContainer}>
                     <View>
                         <Image source={{ uri: `${URL}${banner}` }} style={styles.image} />
-                        <Text style={[styles.textBase, styles.title]}>{nombre}</Text>
-                        <Text style={[styles.textBase, styles.date]}>{fecha_inicio.slice(0, 10)}</Text>
+                        <Text style={[styles.textBase, styles.title]}>{name}</Text>
+                        <Text style={[styles.textBase, styles.date]}>{startDate.slice(0, 10)}</Text>
                     </View>
                 </View>
             </Pressable>
@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     },
     image: {
         width: '100%',
-        height: 200,
+        height: 300,
     },
     textBase: {
         paddingHorizontal: 10

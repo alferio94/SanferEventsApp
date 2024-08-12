@@ -2,7 +2,7 @@ import { useLayoutEffect, useState } from "react";
 import { Image, StyleSheet, Text, View, Platform, Linking, Pressable } from "react-native"
 import { Ionicons } from '@expo/vector-icons';
 import { getHotel } from "../../util/http";
-
+import { URL } from "../../constants/url";
 
 const HotelDetails = ({ route }) => {
     const eventId = route.params.eventId
@@ -11,11 +11,11 @@ const HotelDetails = ({ route }) => {
         getHotelDetails();
     }, [])
     function phoneHandler() {
-        const phoneUrl = `tel:${hotel.telefono}`
+        const phoneUrl = `tel:${hotel.phone}`
         Linking.openURL(phoneUrl)
     }
     function mapHandler() {
-        Linking.openURL(hotel.ubicacion);
+        Linking.openURL(hotel.map);
     }
     async function getHotelDetails() {
         try {
@@ -27,15 +27,15 @@ const HotelDetails = ({ route }) => {
     }
     if(!hotel){
         return<View>
-            <Text>Hotel no asignado aun</Text>
+            <Text>Hotel no asignado aún</Text>
         </View>
     }
     return (
         <View style={styles.container}>
-            <Image source={{ uri: `${hotel.foto}` }} style={styles.image} />
+            <Image source={{ uri: `${URL}${hotel.photo}` }} style={styles.image} />
             <View style={styles.details}>
                 <View>
-                    <Text style={styles.eventName}>{hotel.nombre}</Text>
+                    <Text style={styles.eventName}>{hotel.name}</Text>
                 </View>
                 <Ionicons style={styles.calendarIcon} name="business-sharp" />
             </View>
@@ -43,13 +43,13 @@ const HotelDetails = ({ route }) => {
                 <Pressable onPress={phoneHandler}>
                     <View style={styles.infoContainer}>
                         <Ionicons style={[styles.basicText, styles.infoIcon]} name="call-sharp" />
-                        <Text style={styles.basicText}>{hotel.telefono}</Text>
+                        <Text style={styles.basicText}>{hotel.phone}</Text>
                     </View>
                 </Pressable>
                 <Pressable onPress={mapHandler}>
                     <View style={styles.infoContainer}>
                         <Ionicons style={[styles.basicText, styles.infoIcon]} name="location-sharp" />
-                        <Text style={styles.basicText}>{hotel.direccion}</Text>
+                        <Text style={styles.basicText}>{hotel.address}</Text>
                     </View>
                 </Pressable>
             </View>
@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     },
     image: {
         width: '100%',
-        height: 200,
+        height: 300,
     },
     details: {
         flexDirection: 'row',

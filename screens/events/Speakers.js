@@ -11,7 +11,6 @@ const Speakers = ({route}) => {
 
     async function getSpeakersHandler(){
         const speakersArr = await getSpeakers(eventID);
-
         speakersArr && setSpeakers(speakersArr);
     }
     useEffect(()=>{
@@ -19,7 +18,7 @@ const Speakers = ({route}) => {
     },[])
   return (
     <View style={styles.container}>
-       {speakers.length > 0 ?  <FlatList data={speakers} renderItem={SpeakerItem} /> : <Text style={styles.errorMsg}>Aun no se han registrado ponentes</Text>}
+       {speakers.length > 0 ?  <FlatList data={speakers} renderItem={SpeakerItem} /> : <Text style={styles.errorMsg}>Aún no se han registrado ponentes</Text>}
     </View>
   )
 }

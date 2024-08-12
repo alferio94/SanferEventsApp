@@ -19,31 +19,28 @@ const EventDetails = ({ route, navigation }) => {
 
     /* const {nombre} =  */
     return (
-        <View>
+        <View style={{flex:1}}>
             <Image source={{ uri: `${URL}${eventSelected.banner}` }} style={styles.image} />
             <View style={styles.details}>
                 <View>
-                    <Text style={styles.eventName}>{eventSelected.nombre}</Text>
-                    <Text style={styles.eventDate}>{eventSelected.fecha_inicio.slice(0, 10)}</Text>
+                    <Text style={styles.eventName}>{eventSelected.name}</Text>
+                    <Text style={styles.eventDate}>{eventSelected.startDate.slice(0, 10)}</Text>
                 </View>
                 <Ionicons style={styles.calendarIcon} name="calendar" />
             </View>
 
             <ScrollView>
                 <View style={styles.iconContainer}>
-                    <IconButton icon='today' label='Agenda' onPress={clickHandler.bind(this, 'agenda')} />
-                    <IconButton icon='easel-sharp' label='Ponentes' onPress={clickHandler.bind(this, 'speakers')}/>
-                    <IconButton icon='business-sharp' label='Sede' onPress={clickHandler.bind(this, 'sedeDetails')}/>
-                    <IconButton icon='airplane-sharp' label='Transporte' onPress={clickHandler.bind(this,'transport')}/>
-                    <IconButton icon='bed-sharp' label='Hotel' onPress={clickHandler.bind(this,'hotel')}/>
-                    <IconButton icon='restaurant-sharp' label='Alimentos' onPress={clickHandler.bind(this, 'foodInfo')}/>
-                    <IconButton icon='information-circle-sharp' label='Informacion General' onPress={clickHandler.bind(this, 'generalInfo')}/>
-                    <IconButton icon='medkit' label='Atención Médica'onPress={clickHandler.bind(this, 'health')}/>
-                    <IconButton icon='clipboard-sharp' label='Encuestas'/>
+                    {/* crear un iconButton desde un array de icons en eventSelected.menuItems */}
+                    {eventSelected.menuItems.map((item) => (
+                        <IconButton key={item.id} icon={item.icon} label={item.label} onPress={clickHandler.bind(this, item.path)} />
+                    ))}
                 </View>
             </ScrollView>
         </View>
     )
+
+
 }
 
 export default EventDetails;
@@ -52,7 +49,7 @@ const styles = StyleSheet.create({
     imageContainer: {},
     image: {
         width: '100%',
-        height: 200,
+        height: 300,
     },
     details: {
         flexDirection: 'row',
@@ -70,7 +67,7 @@ const styles = StyleSheet.create({
 
     },
     eventName: {
-        fontSize: 20,
+        fontSize: 16,
         fontWeight: 'bold'
     },
     eventDate: {
@@ -84,7 +81,7 @@ const styles = StyleSheet.create({
     iconContainer: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        paddingVertical:10,
+        paddingVertical:20,
         flex:1,
         alignItems:'center',
         justifyContent:'center'

@@ -10,23 +10,23 @@ import { Ionicons } from '@expo/vector-icons';
 const Sede = ({ route }) => {
     const userCntx = useContext(UserContext)
     const eventId = route.params.eventId;
-    const { sede, sede_telefono, sede_mapa, sede_foto } = userCntx.events.find(event => event.id === eventId);
+    const { campus, campusPhone, campusMap, campusImage } = userCntx.events.find(event => event.id === eventId);
 
 
     function phoneHandler() {
-        const phoneUrl = `tel:${sede_telefono}`
+        const phoneUrl = `tel:${campusPhone}`
         Linking.openURL(phoneUrl)
     }
     function mapHandler(){
-        Linking.openURL(sede_mapa);
+        Linking.openURL(campusMap);
     }
 
     return (
         <View style={styles.container}>
-            <Image source={{ uri: `${URL}${sede_foto}` }} style={styles.image} />
+            <Image source={{ uri: `${URL}${campusImage}` }} style={styles.image} />
             <View style={styles.details}>
                 <View>
-                    <Text style={styles.eventName}>{sede}</Text>
+                    <Text style={styles.eventName}>{campus}</Text>
                 </View>
                 <Ionicons style={styles.calendarIcon} name="business-sharp" />
             </View>
@@ -34,13 +34,13 @@ const Sede = ({ route }) => {
                 <Pressable onPress={phoneHandler}>
                     <View style={styles.infoContainer}>
                         <Ionicons style={[styles.basicText, styles.infoIcon]} name="call-sharp" />
-                        <Text style={styles.basicText}>{sede_telefono}</Text>
+                        <Text style={styles.basicText}>{campusPhone}</Text>
                     </View>
                 </Pressable>
                 <Pressable onPress={mapHandler}>
                     <View style={styles.infoContainer}>
                         <Ionicons style={[styles.basicText, styles.infoIcon]} name="location-sharp" />
-                        <Text style={styles.basicText}>{sede_mapa}</Text>
+                        <Text style={styles.basicText}>{campusMap}</Text>
                     </View>
                 </Pressable>
             </View>
@@ -58,7 +58,7 @@ const styles = StyleSheet.create({
     },
     image: {
         width: '100%',
-        height: 200,
+        height: 300,
     },
     details: {
         flexDirection: 'row',

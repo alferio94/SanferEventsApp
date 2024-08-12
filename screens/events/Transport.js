@@ -22,7 +22,7 @@ const Transport = ({ route }) => {
         if (map.length > 2) {
             Linking.openURL(map);
         } else {
-            Alert.alert('Sin mapa', 'El administrador aun no ha proporcionado un enlace a la ubicacion')
+            Alert.alert('Sin mapa', 'El administrador aún no ha proporcionado un enlace a la ubicacion')
         }
     }
     function renderItem({ item }) {

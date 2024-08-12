@@ -1,12 +1,15 @@
-import { Pressable, StyleSheet, Text, View } from "react-native"
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from "react-native"
 import { Ionicons } from '@expo/vector-icons'
 
+
+
 const IconButton = ({icon, label, onPress}) => {
+  const width = useWindowDimensions().width
   return (
     <View style={styles.container}>
         <Pressable style={({pressed}) => pressed && styles.pressed} onPress={onPress}>
-            <Ionicons style={styles.icon} name={icon} />
-            <Text style={styles.label}>{label}</Text>
+            <Ionicons style={[styles.icon, {fontSize: width < 400 ? 50 : 40}]} name={icon} />
+            <Text style={[styles.label, {fontSize: width < 400 ? 18 : 14}]}>{label}</Text>
         </Pressable>
     </View>
   )
@@ -18,7 +21,7 @@ const styles = StyleSheet.create({
     container:{
         width:110,
         height:110,
-        justifyContent:'center',
+        justifyContent:'flex-start',
         alignItems:'center',
         padding:5
     },
@@ -26,7 +29,6 @@ const styles = StyleSheet.create({
        opacity: 0.75
     },  
     icon:{
-        fontSize:35,
         textAlign:'center'
     },
     label:{

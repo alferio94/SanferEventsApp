@@ -1,14 +1,14 @@
-import { View,Text, StyleSheet } from "react-native"
+import { View,Text, StyleSheet, Image } from "react-native"
 import { GlobalStyles } from "../../../constants/styles";
-
+import { URL } from "../../../constants/url";
 
 const SpeakerItem = ({item}) => {
   return (
    <View style={styles.infoContainer}>
-    <View style={styles.img}></View>
+        {(item.speakerPhoto && item.speakerPhoto !== '') ? <Image source={{ uri: `${URL}${item.speakerPhoto}` }} style={styles.img}/> : <View style={styles.img}></View>}
     <View>
-        <Text style={styles.speaker}>{item.nombre}</Text>
-        <Text style={styles.presentation}>{item.ponencia}</Text>
+        <Text style={styles.speaker}>{item.name}</Text>
+        <Text style={styles.presentation}>{item.presentation}</Text>
     </View>
    </View>
   )
@@ -25,9 +25,9 @@ const styles = StyleSheet.create({
     img:{
         width:80,
         height:80,
-        backgroundColor: GlobalStyles.primary50,
         borderRadius:40,
-        marginHorizontal:20
+        marginHorizontal:20,
+        backgroundColor:GlobalStyles.primary50,
     },
     speaker:{
         fontSize:20,
