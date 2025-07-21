@@ -8,6 +8,7 @@ import GeneralInfo from "../screens/events/GeneralInfo";
 import FoodInfo from "../screens/events/FoodInfo";
 import Speakers from "../screens/events/Speakers";
 import Schedule from "../screens/events/Schedule";
+import GroupSelector from "../screens/events/GroupSelector";
 import HotelDetails from "../screens/events/HotelDetails";
 import Transport from "../screens/events/Transport";
 import HealthCare from "../screens/events/HealthCare";
@@ -24,6 +25,7 @@ const EventStack = () => {
                 <Stack.Screen name="generalInfo" component={GeneralInfo} options={{title: 'Informacion General'}} />
                 <Stack.Screen name="foodInfo" component={FoodInfo} options={{title: 'Alimentos'}} />
                 <Stack.Screen name="speakers" component={Speakers} options={{title: 'Ponentes'}} />
+                <Stack.Screen name="groupSelector" component={GroupSelector} options={{title: 'Seleccionar Grupo'}} />
                 <Stack.Screen name="agenda" component={Schedule} options={{title: 'Agenda'}} />
                 <Stack.Screen name="hotel" component={HotelDetails} options={{title: 'Hotel'}} />
                 <Stack.Screen name="transport" component={Transport} options={{title: 'Transportes'}} />

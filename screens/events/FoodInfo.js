@@ -17,7 +17,7 @@ const FoodInfo = ({ route }) => {
     }, [eventId])
     return (
         <View style={styles.container}>
-            {food.length > 0 ? <RestaurantList food={food} /> : <Text style={styles.errorMsg}>No se han agregado restaurantes aún</Text>}
+            {food.length > 0 ? <RestaurantList food={food} /> : <Text style={styles.errorMsg}>No se han agregado restaurantes aun</Text>}
         </View>
 
     )

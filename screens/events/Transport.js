@@ -1,94 +1,222 @@
-import { useLayoutEffect, useState } from "react";
-import { FlatList, View, Text, StyleSheet, Platform, Pressable, Linking, Alert } from "react-native"
-import { getTransports } from "../../util/http";
-import { Ionicons } from '@expo/vector-icons';
+import {
+  StyleSheet,
+  Text,
+  View,
+  FlatList,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
+import { useContext, useLayoutEffect, useState, useEffect } from "react";
+import { getTransportsByGroup } from "../../util/http";
+import { AuthContext } from "../../context/AuthContext";
+import { Ionicons } from "@expo/vector-icons";
+import LoadingOverlay from "../../components/ui/LoadingOverlay";
+import TransportItem from "../../components/app/EventDetails/TransportItem";
+import { GlobalStyles } from "../../constants/styles";
 
+const Transport = ({ route, navigation }) => {
+  const { eventId, groupId, groupName, eventName } = route.params;
+  const { events } = useContext(AuthContext);
+  const [transports, setTransports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-const Transport = ({ route }) => {
-    const eventId = route.params.eventId;
-    const [transports, setTransports] = useState([]);
-    useLayoutEffect(() => {
-        getTransportsEvent()
-    }, [])
-    async function getTransportsEvent() {
-        try {
-            const data = await getTransports(eventId);
-            data.length > 0 && setTransports(data);
-        } catch (error) {
+  // Obtener información del evento
+  const eventSelected = events.find((event) => event.id === eventId);
 
-        }
+  useEffect(() => {
+    if (groupId) {
+      getTransportsData();
     }
-    function pressHandler(map) {
-        if (map.length > 2) {
-            Linking.openURL(map);
-        } else {
-            Alert.alert('Sin mapa', 'El administrador aún no ha proporcionado un enlace a la ubicacion')
-        }
+  }, [groupId]);
+
+  // Configurar el título de la pantalla
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: `Transportes - ${groupName}`,
+      headerBackTitle: "Grupos",
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => {
+            Alert.alert(
+              "Información",
+              `Mostrando transportes del grupo: ${groupName}\\nEvento: ${eventName || eventSelected?.name || eventSelected?.nombre}`,
+              [{ text: "OK" }]
+            );
+          }}
+          style={{ marginRight: 10 }}
+        >
+          <Ionicons name="information-circle-outline" size={24} color="white" />
+        </TouchableOpacity>
+      ),
+    });
+  }, [groupName, eventName, eventSelected]);
+
+  async function getTransportsData() {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const data = await getTransportsByGroup(groupId);
+
+      if (data && data.length > 0) {
+        // Ordenar transportes por fecha de salida
+        const sortedTransports = data.sort((a, b) => 
+          new Date(a.departureTime) - new Date(b.departureTime)
+        );
+        setTransports(sortedTransports);
+      } else {
+        setTransports([]);
+        setError("No hay opciones de transporte para este grupo");
+      }
+    } catch (error) {
+      console.error("Error loading transports:", error);
+      setError("Error al cargar las opciones de transporte");
+      setTransports([]);
+    } finally {
+      setLoading(false);
     }
-    function renderItem({ item }) {
-        return <View style={styles.transport}>
-            <Pressable android_ripple={{ color: '#ccc' }} style={({ pressed }) => [pressed && styles.buttonPressed]} onPress={pressHandler.bind(this, item.mapa)}>
-                <View style={styles.innerContainer}>
-                    <Text style={styles.title}>{item.nombre}</Text>
-                    <View style={styles.dataWrapper}>
-                        <Ionicons style={styles.calendarIcon} name="calendar" />
-                        <Text>{item.fecha.slice(0, 16)}</Text>
-                    </View>
-                </View>
-            </Pressable>
-        </View>
-    }
-    if (transports.length === 0) {
-        return (
-            <View>
-                <Text>No se ha agregado informacion de transporte</Text>
-            </View>
-        )
-    }
+  }
+
+  if (loading) {
+    return <LoadingOverlay />;
+  }
+
+  if (error) {
     return (
-        <View style={styles.listContainer}>
-            <FlatList data={transports} renderItem={renderItem} />
-        </View>
-    )
-}
+      <View style={styles.errorContainer}>
+        <Ionicons name="bus-outline" size={64} color="#ccc" />
+        <Text style={styles.errorTitle}>Sin transportes</Text>
+        <Text style={styles.errorMessage}>{error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={getTransportsData}>
+          <Ionicons name="refresh" size={20} color="white" />
+          <Text style={styles.retryButtonText}>Reintentar</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
-export default Transport
+  return (
+    <View style={styles.container}>
+      {transports.length > 0 ? (
+        <>
+          {/* Header informativo */}
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Opciones de Transporte</Text>
+            <Text style={styles.headerSubtitle}>
+              {transports.length} {transports.length === 1 ? 'opción disponible' : 'opciones disponibles'}
+            </Text>
+            <Text style={styles.headerDescription}>
+              Transportes disponibles para el grupo {groupName}
+            </Text>
+          </View>
+
+          {/* Lista de transportes */}
+          <FlatList
+            data={transports}
+            renderItem={({ item }) => <TransportItem item={item} />}
+            keyExtractor={(item) => item.id}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContainer}
+          />
+        </>
+      ) : (
+        <View style={styles.emptyContainer}>
+          <Ionicons name="bus-outline" size={64} color="#ccc" />
+          <Text style={styles.emptyTitle}>Sin transportes disponibles</Text>
+          <Text style={styles.emptyMessage}>
+            No hay opciones de transporte configuradas para este grupo en este momento.
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+};
+
+export default Transport;
 
 const styles = StyleSheet.create({
-    listContainer: {
-        flex: 1,
-        padding: 20
-    },
-    transport: {
-        padding: 5,
-        marginBottom: 10,
-        elevation: 6,
-        shadowColor: '#000',
-        shadowOpacity: 0.35,
-        shadowOffset: { width: 0, height: 2 },
-        shadowRadius: 4,
-        overflow: Platform.OS === 'android' ? 'hidden' : 'visible'
-    },
-    title: {
-        marginBottom: 5,
-        fontSize: 18,
-        fontWeight: 'bold'
-    },
-    dataWrapper: {
-        flexDirection: 'row',
-        alignItems: 'center'
-    },
-    calendarIcon: {
-        fontSize: 18,
-        marginHorizontal: 10
-    },
-    innerContainer: {
-        borderRadius: 8,
-        overflow: 'hidden',
-        backgroundColor: '#fff',
-        padding: 10
-    },
-    buttonPressed: {
-        opacity: 0.75
-    },
-})
+  container: {
+    flex: 1,
+    backgroundColor: "#f8f9fa",
+  },
+  header: {
+    backgroundColor: "white",
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e1e5e9",
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 4,
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: GlobalStyles.primary500 || "#007AFF",
+    fontWeight: "500",
+    marginBottom: 6,
+  },
+  headerDescription: {
+    fontSize: 12,
+    color: "#666",
+  },
+  listContainer: {
+    padding: 16,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 40,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#333",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyMessage: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 40,
+    backgroundColor: "#f8f9fa",
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#333",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  errorMessage: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  retryButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: GlobalStyles.primary500 || "#007AFF",
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: "white",
+    fontSize: 14,
+    fontWeight: "600",
+    marginLeft: 8,
+  },
+});

@@ -1,1 +1,2 @@
-export const URL = 'https://eralfcomputer.online/' 
+export const URL = "https://sanfer-backend-production.up.railway.app/api";
+

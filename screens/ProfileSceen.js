@@ -16,9 +16,9 @@ const ProfileSceen = () => {
       <Text style={styles.welcome}>Bienvenido</Text>
       <View style={styles.userData}>
         <View style={styles.img}></View>
-        <Text style={styles.userInfo}>{user.name}</Text>
+        <Text style={styles.userInfo}>{user.nombre} {user.apellidos}</Text>
       </View>
-      <ButtonCustom title='Cerrar Sesión' onPress={logOutHandler}/>
+      <ButtonCustom title='Cerrar Sesion' onPress={logOutHandler}/>
     </View>
   )
 }
