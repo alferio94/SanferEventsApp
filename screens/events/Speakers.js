@@ -25,7 +25,6 @@ const Speakers = ({route}) => {
                 setSpeakers([]);
             }
         } catch (error) {
-            console.error('Error loading speakers:', error);
             setError('Error al cargar los ponentes');
             setSpeakers([]);
         } finally {

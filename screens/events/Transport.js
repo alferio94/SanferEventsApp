@@ -70,7 +70,6 @@ const Transport = ({ route, navigation }) => {
         setError("No hay opciones de transporte para este grupo");
       }
     } catch (error) {
-      console.error("Error loading transports:", error);
       setError("Error al cargar las opciones de transporte");
       setTransports([]);
     } finally {

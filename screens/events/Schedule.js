@@ -4,7 +4,6 @@ import {
   Text,
   View,
   TouchableOpacity,
-  Platform,
   Modal,
   ScrollView,
   Linking,
@@ -119,7 +118,6 @@ const Schedule = ({ route, navigation }) => {
         setError("No hay actividades programadas para este grupo");
       }
     } catch (error) {
-      console.error("Error loading schedule:", error);
       setError("Error al cargar la agenda");
       setSchedule({});
     } finally {
@@ -376,7 +374,6 @@ const Schedule = ({ route, navigation }) => {
                             onPress: (event, href) => {
                               if (href) {
                                 Linking.openURL(href).catch((err) => {
-                                  console.error("Error opening link:", err);
                                   Alert.alert(
                                     "Error",
                                     "No se pudo abrir el enlace",

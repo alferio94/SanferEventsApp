@@ -49,7 +49,6 @@ const ProfileScreen = () => {
         }
       }
     } catch (error) {
-      console.error("Toggle biometric error:", error);
       showToast(
         "error",
         "Error",

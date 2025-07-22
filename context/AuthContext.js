@@ -27,9 +27,24 @@ function AuthContextProvider({ children }) {
 
     // Verificar sesión existente al iniciar la app
     useEffect(() => {
-        checkExistingSession();
-        loadBiometricStatus();
+        initializeApp();
     }, []);
+
+    const initializeApp = async () => {
+        try {
+            setIsLoading(true);
+            
+            // Secuenciar la inicialización para evitar race conditions
+            await loadBiometricStatus();
+            await checkExistingSession();
+        } catch (error) {
+            setUser(null);
+            setIsAuthenticated(false);
+            setIsBiometricEnabled(false);
+        } finally {
+            setIsLoading(false);
+        }
+    };
     
     // Cargar estado biométrico
     const loadBiometricStatus = async () => {
@@ -37,7 +52,6 @@ function AuthContextProvider({ children }) {
             const biometricStatus = await AuthService.isBiometricEnabled();
             setIsBiometricEnabled(biometricStatus);
         } catch (error) {
-            console.error('Error loading biometric status:', error);
             setIsBiometricEnabled(false);
         }
     };
@@ -45,8 +59,6 @@ function AuthContextProvider({ children }) {
     // Verificar si hay una sesión activa
     const checkExistingSession = async () => {
         try {
-            setIsLoading(true);
-            
             // Verificar si hay una sesión activa
             const hasSession = await AuthService.hasActiveSession();
             
@@ -73,11 +85,9 @@ function AuthContextProvider({ children }) {
                 setIsAuthenticated(false);
             }
         } catch (error) {
-            console.error('Error checking existing session:', error);
             setUser(null);
+            setEvents([]);
             setIsAuthenticated(false);
-        } finally {
-            setIsLoading(false);
         }
     };
 
@@ -87,7 +97,6 @@ function AuthContextProvider({ children }) {
             const userEvents = await getEvents(userId);
             setEvents(userEvents || []);
         } catch (error) {
-            console.error('Error loading user events:', error);
             setEvents([]);
         }
     };
@@ -119,7 +128,6 @@ function AuthContextProvider({ children }) {
                 return { success: false, error: result.error };
             }
         } catch (error) {
-            console.error('Login error in context:', error);
             return { success: false, error: 'Error de conexión' };
         } finally {
             setIsLoading(false);
@@ -145,7 +153,6 @@ function AuthContextProvider({ children }) {
                 return { success: false, error: result.error };
             }
         } catch (error) {
-            console.error('Biometric login error in context:', error);
             return { success: false, error: 'Error en autenticación biométrica' };
         } finally {
             setIsLoading(false);
@@ -158,7 +165,6 @@ function AuthContextProvider({ children }) {
             const result = await AuthService.setupBiometricAuthentication(email, password);
             return result;
         } catch (error) {
-            console.error('Setup biometrics error in context:', error);
             return false;
         }
     };
@@ -175,7 +181,6 @@ function AuthContextProvider({ children }) {
             
             return { success: true };
         } catch (error) {
-            console.error('Logout error in context:', error);
             // Incluso si hay error en el servidor, limpiar estado local
             setUser(null);
             setEvents([]);
@@ -196,7 +201,6 @@ function AuthContextProvider({ children }) {
         try {
             return await AuthService.getAvailableLoginOptions();
         } catch (error) {
-            console.error('Error getting login options:', error);
             return {
                 biometricSupported: false,
                 biometricEnabled: false,
@@ -239,7 +243,6 @@ function AuthContextProvider({ children }) {
             }
             return false;
         } catch (error) {
-            console.error('Error enabling biometric:', error);
             return false;
         }
     };
@@ -254,7 +257,6 @@ function AuthContextProvider({ children }) {
             }
             return false;
         } catch (error) {
-            console.error('Error disabling biometric:', error);
             return false;
         }
     };

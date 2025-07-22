@@ -10,11 +10,18 @@ class AuthService {
   constructor() {
     this.isBiometricAvailable = false;
     this.biometricType = null;
-    this.initializeBiometrics();
+    this._initPromise = null;
   }
 
   // Inicializar verificación de biometría disponible
   async initializeBiometrics() {
+    if (!this._initPromise) {
+      this._initPromise = this._performBiometricInit();
+    }
+    return this._initPromise;
+  }
+
+  async _performBiometricInit() {
     try {
       const hasHardware = await LocalAuthentication.hasHardwareAsync();
       const isEnrolled = await LocalAuthentication.isEnrolledAsync();
@@ -23,15 +30,19 @@ class AuthService {
       this.isBiometricAvailable = hasHardware && isEnrolled;
       this.biometricType = supportedTypes;
       
-      console.log('Biometric status:', {
-        hasHardware,
-        isEnrolled,
-        supportedTypes,
-        available: this.isBiometricAvailable
-      });
+
+      return {
+        available: this.isBiometricAvailable,
+        types: this.biometricType
+      };
     } catch (error) {
-      console.error('Error initializing biometrics:', error);
       this.isBiometricAvailable = false;
+      this.biometricType = null;
+      return {
+        available: false,
+        types: null,
+        error: error.message
+      };
     }
   }
 
@@ -47,7 +58,6 @@ class AuthService {
       const enabled = await SecureStore.getItemAsync(BIOMETRIC_STORAGE_KEY);
       return enabled === 'true';
     } catch (error) {
-      console.error('Error checking biometric status:', error);
       return false;
     }
   }
@@ -58,7 +68,6 @@ class AuthService {
       await SecureStore.setItemAsync(BIOMETRIC_STORAGE_KEY, enabled.toString());
       return true;
     } catch (error) {
-      console.error('Error setting biometric status:', error);
       return false;
     }
   }
@@ -79,7 +88,6 @@ class AuthService {
 
       return result.success;
     } catch (error) {
-      console.error('Biometric authentication error:', error);
       return false;
     }
   }
@@ -91,7 +99,6 @@ class AuthService {
       await SecureStore.setItemAsync(USER_CREDENTIALS_KEY, credentials);
       return true;
     } catch (error) {
-      console.error('Error saving credentials:', error);
       return false;
     }
   }
@@ -102,7 +109,6 @@ class AuthService {
       const credentials = await SecureStore.getItemAsync(USER_CREDENTIALS_KEY);
       return credentials ? JSON.parse(credentials) : null;
     } catch (error) {
-      console.error('Error getting saved credentials:', error);
       return null;
     }
   }
@@ -114,7 +120,6 @@ class AuthService {
       await SecureStore.deleteItemAsync(BIOMETRIC_STORAGE_KEY);
       return true;
     } catch (error) {
-      console.error('Error removing saved credentials:', error);
       return false;
     }
   }
@@ -143,7 +148,6 @@ class AuthService {
         };
       }
     } catch (error) {
-      console.error('Login error:', error);
       return {
         success: false,
         error: 'Error de conexión. Intenta nuevamente.'
@@ -181,7 +185,6 @@ class AuthService {
       // Hacer login con credenciales guardadas
       return await this.loginWithCredentials(credentials.email, credentials.password);
     } catch (error) {
-      console.error('Biometric login error:', error);
       return {
         success: false,
         error: 'Error en autenticación biométrica'
@@ -240,7 +243,6 @@ class AuthService {
                     resolve(false);
                   }
                 } catch (error) {
-                  console.error('Setup biometric error:', error);
                   resolve(false);
                 }
               }
@@ -249,7 +251,6 @@ class AuthService {
         );
       });
     } catch (error) {
-      console.error('Setup biometric authentication error:', error);
       return false;
     }
   }
@@ -260,7 +261,6 @@ class AuthService {
       await logout();
       return true;
     } catch (error) {
-      console.error('Logout error:', error);
       return false;
     }
   }
@@ -276,7 +276,6 @@ class AuthService {
       }
       return false;
     } catch (error) {
-      console.error('Check active session error:', error);
       return false;
     }
   }
@@ -289,7 +288,6 @@ class AuthService {
       // await this.removeSavedCredentials();
       return true;
     } catch (error) {
-      console.error('Error disabling biometric:', error);
       return false;
     }
   }

@@ -3,17 +3,17 @@ import { StyleSheet, Text, View } from 'react-native';
 import LoginScreen from './screens/LoginScreen';
 import AppNav from './navigation/AppNav';
 import AuthContextProvider from './context/AuthContext';
+import ErrorBoundary from './components/ErrorBoundary';
 
 
 export default function App() {
   return (
-    <>
-    <StatusBar style='light' />
+    <ErrorBoundary>
+      <StatusBar style='light' />
       <AuthContextProvider>
         <AppNav />
       </AuthContextProvider>
-    </>
-
+    </ErrorBoundary>
   );
 }
 

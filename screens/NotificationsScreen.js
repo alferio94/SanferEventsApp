@@ -1,9 +1,8 @@
-import { Text } from 'react-native'
+import { Text } from "react-native";
 
 const NotificationsScreen = () => {
-  return (
-    <Text>Notifications Screen</Text>
-  )
-}
+  return <Text>Notifications Screen 2</Text>;
+};
 
-export default NotificationsScreen
+export default NotificationsScreen;
+

@@ -12,9 +12,13 @@ const apiClient = axios.create({
 // Interceptor para agregar token automáticamente
 apiClient.interceptors.request.use(
   async (config) => {
-    const token = await SecureStore.getItemAsync('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    try {
+      const token = await SecureStore.getItemAsync('accessToken');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch (error) {
+      // Continue without token if SecureStore fails
     }
     return config;
   },
@@ -50,10 +54,14 @@ apiClient.interceptors.response.use(
           return apiClient(originalRequest);
         }
       } catch (refreshError) {
-        // Si falla el refresh, limpiar tokens y redirigir a login
-        await SecureStore.deleteItemAsync('accessToken');
-        await SecureStore.deleteItemAsync('refreshToken');
-        await SecureStore.deleteItemAsync('userId');
+        // Si falla el refresh, limpiar tokens de forma segura
+        try {
+          await SecureStore.deleteItemAsync('accessToken');
+          await SecureStore.deleteItemAsync('refreshToken');
+          await SecureStore.deleteItemAsync('userId');
+        } catch (deleteError) {
+          // Error cleaning tokens - continue silently
+        }
         // Aquí podrías emitir un evento para que la app navegue al login
         return Promise.reject(refreshError);
       }
@@ -76,7 +84,6 @@ export async function login(userData) {
     
     return { user, accessToken, refreshToken };
   } catch (error) {
-    console.error('Login error:', error);
     return null;
   }
 }
@@ -88,7 +95,6 @@ export async function logout() {
       await axios.post(`${BACKEND_URL}/event-user/logout`, { refreshToken });
     }
   } catch (error) {
-    console.error('Logout error:', error);
   } finally {
     // Limpiar tokens locales siempre
     await SecureStore.deleteItemAsync('accessToken');
@@ -102,7 +108,6 @@ export async function getUserProfile() {
     const response = await apiClient.get('/event-user/profile');
     return response.data.user;
   } catch (error) {
-    console.error('Get user profile error:', error);
     return null;
   }
 }
@@ -123,7 +128,6 @@ export async function refreshTokens() {
     
     return { accessToken, refreshToken: newRefreshToken };
   } catch (error) {
-    console.error('Refresh token error:', error);
     return null;
   }
 }
@@ -134,7 +138,6 @@ export async function getEvents(userId) {
     const response = await apiClient.get(`/event/user/${userId}`);
     return response.data;
   } catch (error) {
-    console.error('Get events error:', error);
     return [];
   }
 }
@@ -145,7 +148,6 @@ export async function getSpeakers(eventId) {
     const response = await apiClient.get(`/speaker/event/${eventId}`);
     return response.data;
   } catch (error) {
-    console.error('Get speakers error:', error);
     return [];
   }
 }
@@ -156,7 +158,6 @@ export async function getUserAssignments(eventId, userId) {
     const response = await apiClient.get(`/event/${eventId}/assignments/${userId}`);
     return response.data;
   } catch (error) {
-    console.error('Get user assignments error:', error);
     return null;
   }
 }
@@ -167,7 +168,6 @@ export async function getAgenda(eventId, groupId) {
     const response = await apiClient.get(`/event-agenda/${eventId}/group/${groupId}`);
     return response.data;
   } catch (error) {
-    console.error('Get agenda error:', error);
     return {};
   }
 }
@@ -177,7 +177,6 @@ export async function getAgendaByEvent(eventId) {
     const response = await apiClient.get(`/event-agenda/${eventId}`);
     return response.data;
   } catch (error) {
-    console.error('Get agenda by event error:', error);
     return [];
   }
 }
@@ -188,7 +187,6 @@ export async function getHotel(eventId) {
     const response = await apiClient.get(`/hotel/event/${eventId}`);
     return response.data[0] || null;
   } catch (error) {
-    console.error('Get hotel error:', error);
     return null;
   }
 }
@@ -199,7 +197,6 @@ export async function getTransports(eventId) {
     const response = await apiClient.get(`/event-transport/event/${eventId}`);
     return response.data;
   } catch (error) {
-    console.error('Get transports error:', error);
     return [];
   }
 }
@@ -209,7 +206,6 @@ export async function getTransportsByGroup(groupId) {
     const response = await apiClient.get(`/event-transport/group/${groupId}`);
     return response.data;
   } catch (error) {
-    console.error('Get transports by group error:', error);
     return [];
   }
 }
@@ -220,7 +216,6 @@ export async function getAppMenu(eventId) {
     const response = await apiClient.get(`/app-menu/event/${eventId}`);
     return response.data.appMenu;
   } catch (error) {
-    console.error('Get app menu error:', error);
     return null;
   }
 }
@@ -231,7 +226,6 @@ export async function getSurveys(eventId) {
     const response = await apiClient.get(`/survey/event/${eventId}`);
     return response.data;
   } catch (error) {
-    console.error('Get surveys error:', error);
     return [];
   }
 }
@@ -241,7 +235,6 @@ export async function getSurveyWithQuestions(surveyId) {
     const response = await apiClient.get(`/survey/${surveyId}/with-questions`);
     return response.data;
   } catch (error) {
-    console.error('Get survey with questions error:', error);
     return null;
   }
 }
@@ -255,7 +248,6 @@ export async function submitSurveyResponse(surveyId, userId, answers) {
     });
     return response.data;
   } catch (error) {
-    console.error('Submit survey response error:', error);
     return null;
   }
 }
@@ -265,17 +257,24 @@ export async function checkSurveyCompleted(surveyId, userId) {
     const response = await apiClient.get(`/survey-response/check/${surveyId}/${userId}`);
     return response.data;
   } catch (error) {
-    console.error('Check survey completed error:', error);
     return false;
   }
 }
 
 // ===== FUNCIONES DE UTILIDAD =====
 export async function isAuthenticated() {
-  const token = await SecureStore.getItemAsync('accessToken');
-  return !!token;
+  try {
+    const token = await SecureStore.getItemAsync('accessToken');
+    return !!token;
+  } catch (error) {
+    return false;
+  }
 }
 
 export async function getStoredUserId() {
-  return await SecureStore.getItemAsync('userId');
+  try {
+    return await SecureStore.getItemAsync('userId');
+  } catch (error) {
+    return null;
+  }
 }

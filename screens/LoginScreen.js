@@ -1,11 +1,18 @@
-import { StyleSheet, Text, View, TextInput, Alert, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  Alert,
+  TouchableOpacity,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { GlobalStyles } from "../constants/styles";
 import { ButtonCustom } from "../components/ui/ButtonCustom";
 import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 import LoadingOverlay from "../components/ui/LoadingOverlay";
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from "@expo/vector-icons";
 
 const LoginScreen = () => {
   const authCntx = useContext(AuthContext);
@@ -18,7 +25,7 @@ const LoginScreen = () => {
     biometricSupported: false,
     biometricEnabled: false,
     hasCredentials: false,
-    canUseBiometric: false
+    canUseBiometric: false,
   });
 
   // Verificar opciones de login disponibles al cargar
@@ -30,9 +37,7 @@ const LoginScreen = () => {
     try {
       const options = await authCntx.getLoginOptions();
       setLoginOptions(options);
-    } catch (error) {
-      console.error('Error checking login options:', error);
-    }
+    } catch (error) {}
   };
 
   function inputChangeHandler(inputIdentifier, enteredValue) {
@@ -46,10 +51,7 @@ const LoginScreen = () => {
 
   async function loginConfirm() {
     if (!formData.email.trim() || !formData.password.trim()) {
-      Alert.alert(
-        "Campos requeridos",
-        "Por favor ingresa email y contraseña"
-      );
+      Alert.alert("Campos requeridos", "Por favor ingresa email y contraseña");
       return;
     }
 
@@ -57,21 +59,20 @@ const LoginScreen = () => {
       const result = await authCntx.login(
         formData.email.trim().toLowerCase(),
         formData.password,
-        saveCredentials
+        saveCredentials,
       );
 
       if (!result.success) {
         Alert.alert(
           "Error de autenticación",
-          result.error || "Credenciales inválidas"
+          result.error || "Credenciales inválidas",
         );
       }
       // Si es exitoso, el contexto manejará la navegación
     } catch (error) {
-      console.error('Login error:', error);
       Alert.alert(
         "Error de conexión",
-        "No se pudo conectar con el servidor. Intenta nuevamente."
+        "No se pudo conectar con el servidor. Intenta nuevamente.",
       );
     }
   }
@@ -79,20 +80,16 @@ const LoginScreen = () => {
   async function biometricLogin() {
     try {
       const result = await authCntx.loginWithBiometrics();
-      
+
       if (!result.success) {
         Alert.alert(
           "Error de autenticación biométrica",
-          result.error || "No se pudo autenticar con biometría"
+          result.error || "No se pudo autenticar con biometría",
         );
       }
       // Si es exitoso, el contexto manejará la navegación
     } catch (error) {
-      console.error('Biometric login error:', error);
-      Alert.alert(
-        "Error",
-        "Error en autenticación biométrica"
-      );
+      Alert.alert("Error", "Error en autenticación biométrica");
     }
   }
 
@@ -113,7 +110,7 @@ const LoginScreen = () => {
         <View style={styles.formContainer}>
           <Text style={styles.title}>Bienvenido</Text>
           <Text style={styles.subtitle}>Ingresa los datos de tu cuenta</Text>
-          
+
           <TextInput
             style={styles.textInput}
             placeholder="correo@ejemplo.com"
@@ -123,7 +120,7 @@ const LoginScreen = () => {
             autoCapitalize="none"
             autoCorrect={false}
           />
-          
+
           <TextInput
             style={styles.textInput}
             placeholder="Contraseña"
@@ -135,8 +132,8 @@ const LoginScreen = () => {
 
           {/* Opción para guardar credenciales */}
           {loginOptions.biometricSupported && (
-            <TouchableOpacity 
-              style={styles.checkboxContainer} 
+            <TouchableOpacity
+              style={styles.checkboxContainer}
               onPress={toggleSaveCredentials}
             >
               <Ionicons
@@ -154,24 +151,18 @@ const LoginScreen = () => {
         <View style={styles.buttonContainer}>
           {/* Botón de login biométrico */}
           {loginOptions.canUseBiometric && (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.biometricButton}
               onPress={biometricLogin}
             >
-              <Ionicons
-                name="finger-print"
-                size={30}
-                color="white"
-              />
-              <Text style={styles.biometricText}>
-                Acceder con biometría
-              </Text>
+              <Ionicons name="finger-print" size={30} color="white" />
+              <Text style={styles.biometricText}>Acceder con biometría</Text>
             </TouchableOpacity>
           )}
 
           {/* Botón de login normal */}
-          <ButtonCustom 
-            title={"Iniciar sesión"} 
+          <ButtonCustom
+            title={"Iniciar sesión"}
             onPress={loginConfirm}
             style={loginOptions.canUseBiometric ? styles.loginButton : null}
           />
@@ -283,4 +274,3 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
 });
-

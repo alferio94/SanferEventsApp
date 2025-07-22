@@ -51,7 +51,6 @@ const TransportItem = ({ item }) => {
   const handleMapPress = () => {
     if (item.mapUrl) {
       Linking.openURL(item.mapUrl).catch(err => {
-        console.error('Error opening map:', err);
         Alert.alert('Error', 'No se pudo abrir el mapa');
       });
     }

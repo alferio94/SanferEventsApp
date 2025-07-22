@@ -50,7 +50,6 @@ const GroupSelector = ({ route, navigation }) => {
         }
       }
     } catch (error) {
-      console.error('Error fetching user groups:', error);
       Alert.alert(
         'Error',
         'No se pudieron cargar los grupos del usuario'
