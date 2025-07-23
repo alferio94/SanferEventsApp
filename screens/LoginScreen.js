@@ -21,6 +21,7 @@ const LoginScreen = () => {
     password: "",
   });
   const [saveCredentials, setSaveCredentials] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [loginOptions, setLoginOptions] = useState({
     biometricSupported: false,
     biometricEnabled: false,
@@ -121,14 +122,26 @@ const LoginScreen = () => {
             autoCorrect={false}
           />
 
-          <TextInput
-            style={styles.textInput}
-            placeholder="Contraseña"
-            secureTextEntry={true}
-            value={formData.password}
-            onChangeText={inputChangeHandler.bind(this, "password")}
-            autoCapitalize="none"
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Contraseña"
+              secureTextEntry={!showPassword}
+              value={formData.password}
+              onChangeText={inputChangeHandler.bind(this, "password")}
+              autoCapitalize="none"
+            />
+            <TouchableOpacity
+              style={styles.eyeButton}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Ionicons
+                name={showPassword ? "eye-off" : "eye"}
+                size={20}
+                color={GlobalStyles.primary500}
+              />
+            </TouchableOpacity>
+          </View>
 
           {/* Opción para guardar credenciales */}
           {loginOptions.biometricSupported && (
@@ -222,6 +235,28 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     borderRadius: 20,
     fontSize: 16,
+  },
+  passwordContainer: {
+    position: "relative",
+    marginVertical: 10,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  passwordInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: GlobalStyles.primary100,
+    paddingStart: 25,
+    paddingEnd: 50,
+    backgroundColor: "white",
+    padding: 15,
+    borderRadius: 20,
+    fontSize: 16,
+  },
+  eyeButton: {
+    position: "absolute",
+    right: 15,
+    padding: 10,
   },
   checkboxContainer: {
     flexDirection: "row",

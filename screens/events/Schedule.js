@@ -249,11 +249,13 @@ const Schedule = ({ route, navigation }) => {
         renderEmptyData={renderEmptyDate}
         onDayPress={onDayPress}
         showClosingKnob={true}
+        hideKnob={false}
         minDate={minDate}
         maxDate={maxDate}
         markingType={"dot"}
         pastScrollRange={1}
         futureScrollRange={1}
+        calendarHeight={400}
         theme={{
           dotColor: GlobalStyles.primary100 || "#007AFF",
           selectedDayBackgroundColor: GlobalStyles.primary500 || "#007AFF",
