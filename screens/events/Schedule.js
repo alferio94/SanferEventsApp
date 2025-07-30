@@ -8,7 +8,6 @@ import {
   ScrollView,
   Linking,
 } from "react-native";
-import { Agenda, LocaleConfig } from "react-native-calendars";
 import { GlobalStyles } from "../../constants/styles";
 import { useContext, useLayoutEffect, useState, useEffect } from "react";
 import { getAgenda } from "../../util/http";
@@ -18,48 +17,6 @@ import LoadingOverlay from "../../components/ui/LoadingOverlay";
 import RenderHtml from "react-native-render-html";
 import { useWindowDimensions } from "react-native";
 
-LocaleConfig.locales["es"] = {
-  monthNames: [
-    "Enero",
-    "Febrero",
-    "Marzo",
-    "Abril",
-    "Mayo",
-    "Junio",
-    "Julio",
-    "Agosto",
-    "Septiembre",
-    "Octubre",
-    "Noviembre",
-    "Diciembre",
-  ],
-  monthNamesShort: [
-    "Ene.",
-    "Feb.",
-    "Mar.",
-    "Abr.",
-    "May.",
-    "Jun.",
-    "Jul.",
-    "Ago.",
-    "Sept.",
-    "Oct.",
-    "Nov.",
-    "Dic.",
-  ],
-  dayNames: [
-    "Domingo",
-    "Lunes",
-    "Martes",
-    "Miercoles",
-    "Jueves",
-    "Viernes",
-    "Sabado",
-  ],
-  dayNamesShort: ["Dom.", "Lun.", "Mar.", "Mier.", "Jue.", "Vie.", "Sab."],
-  today: "Hoy",
-};
-LocaleConfig.defaultLocale = "es";
 
 const Schedule = ({ route, navigation }) => {
   const { eventId, groupId, groupName, eventName } = route.params;
@@ -69,7 +26,8 @@ const Schedule = ({ route, navigation }) => {
   const [error, setError] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
-  const { width } = useWindowDimensions();
+  const [selectedDate, setSelectedDate] = useState(null);
+  const { width, height } = useWindowDimensions();
 
   // Obtener información del evento
   const eventSelected = events.find((event) => event.id === eventId);
@@ -81,6 +39,18 @@ const Schedule = ({ route, navigation }) => {
       getSchedule();
     }
   }, [eventId, groupId]);
+
+  // Inicializar fecha seleccionada cuando los datos estén listos
+  useEffect(() => {
+    if (!selectedDate && schedule && Object.keys(schedule).length > 0) {
+      const firstAvailableDay = Object.keys(schedule)
+        .filter(date => schedule[date] && schedule[date].length > 0)
+        .sort()[0];
+      if (firstAvailableDay) {
+        setSelectedDate(firstAvailableDay);
+      }
+    }
+  }, [schedule, selectedDate]);
 
   // Configurar el título de la pantalla
   useLayoutEffect(() => {
@@ -137,68 +107,6 @@ const Schedule = ({ route, navigation }) => {
     setSelectedEvent(null);
   };
 
-  // Función para obtener el día actual en formato YYYY-MM-DD
-  const getTodayDate = () => {
-    return new Date().toISOString().split("T")[0];
-  };
-
-  const renderItem = (reservation) => {
-    const formatTime = (dateString) => {
-      return new Date(dateString).toLocaleTimeString("es-ES", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    };
-
-    return (
-      <TouchableOpacity
-        style={[styles.item, { height: "auto", minHeight: 100 }]}
-        onPress={() => openEventModal(reservation)}
-        activeOpacity={0.7}
-      >
-        <View style={styles.itemContent}>
-          <View style={styles.itemHeader}>
-            <Text style={styles.itemTitle}>
-              {reservation.name || reservation.nombre_actividad}
-            </Text>
-            <Ionicons
-              name="calendar-outline"
-              size={20}
-              color={GlobalStyles.primary500}
-            />
-          </View>
-
-          <View style={styles.itemDetails}>
-            <View style={styles.timeContainer}>
-              <Ionicons name="time-outline" size={16} color="#666" />
-              <Text style={styles.timeText}>
-                {formatTime(reservation.startDate)} -{" "}
-                {formatTime(reservation.endDate)}
-              </Text>
-            </View>
-
-            {reservation.location && (
-              <View style={styles.locationContainer}>
-                <Ionicons name="location-outline" size={16} color="#666" />
-                <Text style={styles.locationText}>{reservation.location}</Text>
-              </View>
-            )}
-          </View>
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
-  const renderEmptyDate = () => {
-    return (
-      <View style={styles.emptyDate}>
-        <Ionicons name="calendar-outline" size={32} color="#ccc" />
-        <Text style={styles.emptyDateText}>
-          No hay actividades programadas para este día
-        </Text>
-      </View>
-    );
-  };
 
   if (loading) {
     return <LoadingOverlay />;
@@ -218,62 +126,173 @@ const Schedule = ({ route, navigation }) => {
     );
   }
 
-  // Formatear fechas para el calendario
-  const formatDateForCalendar = (dateString) => {
-    if (!dateString) return new Date().toISOString().split("T")[0];
-    return new Date(dateString).toISOString().split("T")[0];
+
+  // Formatear fecha para mostrar (ej: "Lunes 30 de Julio")
+  const formatDateForDisplay = (dateString) => {
+    const date = new Date(dateString);
+    const formatted = date.toLocaleDateString("es-ES", {
+      weekday: "long",
+      day: "numeric",
+      month: "long"
+    });
+    
+    // Capitalizar la primera letra del día y del mes
+    return formatted.replace(/^(\w)/, (match) => match.toUpperCase())
+                   .replace(/(\s+de\s+)(\w)/, (match, p1, p2) => p1 + p2.toUpperCase());
   };
 
-  // Usar la fecha actual como default, pero dentro del rango del evento
-  const todayDate = getTodayDate();
-  const minDate = formatDateForCalendar(startDate);
-  const maxDate = formatDateForCalendar(endDate);
-
-  // Si hoy está dentro del rango del evento, usar hoy; sino usar la fecha de inicio
-  const defaultSelectedDate =
-    todayDate >= minDate && todayDate <= maxDate ? todayDate : minDate;
-
-  // Manejar el cambio de día
-  const onDayPress = (day) => {
-    // Solo necesitamos confirmar que el día fue seleccionado
-    // El Agenda manejará automáticamente mostrar los items o renderEmptyDate
-    // c
+  // Formatear hora para mostrar
+  const formatTime = (dateString) => {
+    return new Date(dateString).toLocaleTimeString("es-ES", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
+
+  // Procesar datos del schedule para obtener días disponibles
+  const getAvailableDays = () => {
+    if (!schedule || Object.keys(schedule).length === 0) {
+      return [];
+    }
+
+    return Object.keys(schedule)
+      .filter(date => schedule[date] && schedule[date].length > 0)
+      .sort()
+      .map(date => ({
+        date,
+        events: schedule[date],
+        dayNumber: new Date(date).getDate(),
+        monthName: new Date(date).toLocaleDateString("es-ES", { month: "short" }).replace(/^(\w)/, (match) => match.toUpperCase()),
+        fullDisplayDate: formatDateForDisplay(date),
+        isToday: date === new Date().toISOString().split("T")[0]
+      }));
+  };
+
+  const availableDays = getAvailableDays();
+
+  // Obtener eventos del día seleccionado
+  const getSelectedDayEvents = () => {
+    if (!selectedDate || !schedule[selectedDate]) {
+      return [];
+    }
+    return schedule[selectedDate];
+  };
+
+  const selectedDayEvents = getSelectedDayEvents();
+  const selectedDayInfo = availableDays.find(day => day.date === selectedDate);
 
   return (
     <View style={styles.container}>
-      <Agenda
-        items={schedule}
-        selected={defaultSelectedDate}
-        renderItem={renderItem}
-        renderEmptyData={renderEmptyDate}
-        onDayPress={onDayPress}
-        showClosingKnob={true}
-        hideKnob={false}
-        minDate={minDate}
-        maxDate={maxDate}
-        markingType={"dot"}
-        pastScrollRange={1}
-        futureScrollRange={1}
-        calendarHeight={400}
-        theme={{
-          dotColor: GlobalStyles.primary100 || "#007AFF",
-          selectedDayBackgroundColor: GlobalStyles.primary500 || "#007AFF",
-          agendaKnobColor: GlobalStyles.primary50 || "#E3F2FD",
-          todayButtonTextColor: GlobalStyles.primary100 || "#007AFF",
-          textSectionTitleColor: "#333",
-          dayTextColor: "#333",
-          textDisabledColor: "#ccc",
-          agendaDayTextColor: "#666",
-          agendaDayNumColor: "#333",
-          agendaTodayColor: GlobalStyles.primary500 || "#007AFF",
-        }}
-        hideExtraDays={true}
-        maxToRenderPerBatch={10}
-        showOnlySelectedDayItems={true}
-        refreshControl={null}
-        refreshing={false}
-      />
+      {availableDays.length > 0 ? (
+        <>
+          {/* Day Picker Horizontal */}
+          <View style={styles.dayPickerContainer}>
+            <ScrollView 
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.dayPickerContent}
+            >
+              {availableDays.map((day) => (
+                <TouchableOpacity
+                  key={day.date}
+                  style={[
+                    styles.dayPickerItem,
+                    selectedDate === day.date && styles.dayPickerItemSelected,
+                    day.isToday && styles.dayPickerItemToday
+                  ]}
+                  onPress={() => setSelectedDate(day.date)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[
+                    styles.dayPickerMonth,
+                    selectedDate === day.date && styles.dayPickerTextSelected
+                  ]}>
+                    {day.monthName}
+                  </Text>
+                  <Text style={[
+                    styles.dayPickerDay,
+                    selectedDate === day.date && styles.dayPickerTextSelected,
+                    day.isToday && selectedDate !== day.date && styles.dayPickerTodayText
+                  ]}>
+                    {day.dayNumber}
+                  </Text>
+                  {day.isToday && (
+                    <View style={[
+                      styles.todayIndicator,
+                      selectedDate === day.date && styles.todayIndicatorSelected
+                    ]} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Selected Day Header */}
+          {selectedDayInfo && (
+            <View style={styles.selectedDayHeader}>
+              <Text style={styles.selectedDayTitle}>
+                {selectedDayInfo.fullDisplayDate}
+              </Text>
+              <Text style={styles.selectedDayCount}>
+                {selectedDayEvents.length} {selectedDayEvents.length === 1 ? 'actividad' : 'actividades'}
+              </Text>
+            </View>
+          )}
+
+          {/* Events List for Selected Day */}
+          <ScrollView 
+            style={styles.eventsScrollContainer}
+            contentContainerStyle={styles.eventsScrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {selectedDayEvents.map((event, index) => (
+              <TouchableOpacity
+                key={`${selectedDate}-${index}`}
+                style={styles.eventCard}
+                onPress={() => openEventModal(event)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.eventContent}>
+                  <View style={styles.eventHeader}>
+                    <Text style={styles.eventTitle}>
+                      {event.name || event.nombre_actividad}
+                    </Text>
+                    <Ionicons
+                      name="chevron-forward"
+                      size={16}
+                      color={GlobalStyles.primary500}
+                    />
+                  </View>
+
+                  <View style={styles.eventDetails}>
+                    <View style={styles.timeContainer}>
+                      <Ionicons name="time-outline" size={16} color="#666" />
+                      <Text style={styles.timeText}>
+                        {formatTime(event.startDate)} - {formatTime(event.endDate)}
+                      </Text>
+                    </View>
+
+                    {event.location && (
+                      <View style={styles.locationContainer}>
+                        <Ionicons name="location-outline" size={16} color="#666" />
+                        <Text style={styles.locationText}>{event.location}</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </>
+      ) : (
+        <View style={styles.emptyState}>
+          <Ionicons name="calendar-outline" size={64} color="#ccc" />
+          <Text style={styles.emptyStateTitle}>Sin actividades</Text>
+          <Text style={styles.emptyStateMessage}>
+            No hay actividades programadas para este grupo
+          </Text>
+        </View>
+      )}
 
       {/* Modal para mostrar detalles del evento */}
       <Modal
@@ -420,12 +439,99 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f8f9fa",
   },
-  item: {
+  dayPickerContainer: {
+    backgroundColor: "white",
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e1e5e9",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 3.84,
+    elevation: 3,
+  },
+  dayPickerContent: {
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  dayPickerItem: {
+    backgroundColor: "#f8f9fa",
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: "center",
+    minWidth: 60,
+    position: "relative",
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  dayPickerItemSelected: {
+    backgroundColor: GlobalStyles.primary500 || "#007AFF",
+    borderColor: GlobalStyles.primary500 || "#007AFF",
+  },
+  dayPickerItemToday: {
+    borderColor: GlobalStyles.primary300 || "#87CEEB",
+  },
+  dayPickerMonth: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#666",
+    textTransform: "uppercase",
+  },
+  dayPickerDay: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#333",
+    marginTop: 2,
+  },
+  dayPickerTextSelected: {
+    color: "white",
+  },
+  dayPickerTodayText: {
+    color: GlobalStyles.primary500 || "#007AFF",
+  },
+  todayIndicator: {
+    position: "absolute",
+    bottom: 4,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: GlobalStyles.primary500 || "#007AFF",
+  },
+  todayIndicatorSelected: {
+    backgroundColor: "white",
+  },
+  selectedDayHeader: {
+    backgroundColor: "white",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e1e5e9",
+  },
+  selectedDayTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#333",
+  },
+  selectedDayCount: {
+    fontSize: 14,
+    color: "#666",
+    marginTop: 2,
+  },
+  eventsScrollContainer: {
+    flex: 1,
+  },
+  eventsScrollContent: {
+    padding: 16,
+    paddingBottom: 32,
+  },
+  eventCard: {
     backgroundColor: "white",
     borderRadius: 12,
-    padding: 16,
-    marginRight: 10,
-    marginTop: 10,
+    marginBottom: 8,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -437,30 +543,44 @@ const styles = StyleSheet.create({
     borderLeftWidth: 4,
     borderLeftColor: GlobalStyles.primary500 || "#007AFF",
   },
-  itemContent: {
-    flex: 1,
+  eventContent: {
+    padding: 16,
   },
-  itemHeader: {
+  eventHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
     marginBottom: 8,
   },
-  itemTitle: {
-    fontSize: 18,
+  eventTitle: {
+    fontSize: 16,
     fontWeight: "600",
     color: "#333",
     flex: 1,
-    marginRight: 10,
+    marginRight: 8,
   },
-  itemDescription: {
+  eventDetails: {
+    gap: 6,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 40,
+    minHeight: 300,
+  },
+  emptyStateTitle: {
+    fontSize: 20,
+    fontWeight: "600",
+    color: "#333",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyStateMessage: {
     fontSize: 14,
     color: "#666",
-    marginBottom: 12,
+    textAlign: "center",
     lineHeight: 20,
-  },
-  itemDetails: {
-    gap: 6,
   },
   timeContainer: {
     flexDirection: "row",
@@ -481,54 +601,6 @@ const styles = StyleSheet.create({
     color: "#666",
     marginLeft: 6,
     flex: 1,
-  },
-  emptyDate: {
-    height: 80,
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingTop: 30,
-  },
-  emptyDateText: {
-    fontSize: 14,
-    color: "#999",
-    marginTop: 8,
-    fontStyle: "italic",
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 40,
-    backgroundColor: "#f8f9fa",
-  },
-  errorTitle: {
-    fontSize: 20,
-    fontWeight: "600",
-    color: "#333",
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  errorMessage: {
-    fontSize: 14,
-    color: "#666",
-    textAlign: "center",
-    marginBottom: 24,
-    lineHeight: 20,
-  },
-  retryButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: GlobalStyles.primary500 || "#007AFF",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  retryButtonText: {
-    color: "white",
-    fontSize: 14,
-    fontWeight: "600",
-    marginLeft: 8,
   },
   modalOverlay: {
     flex: 1,
@@ -637,5 +709,33 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#333",
     marginBottom: 4,
+  },
+  calendarToggleContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f8f9fa",
+  },
+  showCalendarButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: GlobalStyles.primary500 || "#007AFF",
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  showCalendarText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
+    marginLeft: 8,
   },
 });
