@@ -127,9 +127,15 @@ const Schedule = ({ route, navigation }) => {
   }
 
 
+  // Función auxiliar para crear fecha local sin problemas de zona horaria
+  const createLocalDate = (dateString) => {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
   // Formatear fecha para mostrar (ej: "Lunes 30 de Julio")
   const formatDateForDisplay = (dateString) => {
-    const date = new Date(dateString);
+    const date = createLocalDate(dateString);
     const formatted = date.toLocaleDateString("es-ES", {
       weekday: "long",
       day: "numeric",
@@ -149,23 +155,37 @@ const Schedule = ({ route, navigation }) => {
     });
   };
 
+  // Función auxiliar para obtener fecha de hoy en formato YYYY-MM-DD local
+  const getTodayDateString = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Procesar datos del schedule para obtener días disponibles
   const getAvailableDays = () => {
     if (!schedule || Object.keys(schedule).length === 0) {
       return [];
     }
 
+    const todayString = getTodayDateString();
+
     return Object.keys(schedule)
       .filter(date => schedule[date] && schedule[date].length > 0)
       .sort()
-      .map(date => ({
-        date,
-        events: schedule[date],
-        dayNumber: new Date(date).getDate(),
-        monthName: new Date(date).toLocaleDateString("es-ES", { month: "short" }).replace(/^(\w)/, (match) => match.toUpperCase()),
-        fullDisplayDate: formatDateForDisplay(date),
-        isToday: date === new Date().toISOString().split("T")[0]
-      }));
+      .map(date => {
+        const localDate = createLocalDate(date);
+        return {
+          date,
+          events: schedule[date],
+          dayNumber: localDate.getDate(),
+          monthName: localDate.toLocaleDateString("es-ES", { month: "short" }).replace(/^(\w)/, (match) => match.toUpperCase()),
+          fullDisplayDate: formatDateForDisplay(date),
+          isToday: date === todayString
+        };
+      });
   };
 
   const availableDays = getAvailableDays();
