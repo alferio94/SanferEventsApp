@@ -35,22 +35,8 @@ const Transport = ({ route, navigation }) => {
     navigation.setOptions({
       title: `Transportes - ${groupName}`,
       headerBackTitle: "Grupos",
-      headerRight: () => (
-        <TouchableOpacity
-          onPress={() => {
-            Alert.alert(
-              "Información",
-              `Mostrando transportes del grupo: ${groupName}\\nEvento: ${eventName || eventSelected?.name || eventSelected?.nombre}`,
-              [{ text: "OK" }]
-            );
-          }}
-          style={{ marginRight: 10 }}
-        >
-          <Ionicons name="information-circle-outline" size={24} color="white" />
-        </TouchableOpacity>
-      ),
     });
-  }, [groupName, eventName, eventSelected]);
+  }, [groupName]);
 
   async function getTransportsData() {
     try {

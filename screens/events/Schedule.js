@@ -17,7 +17,6 @@ import LoadingOverlay from "../../components/ui/LoadingOverlay";
 import RenderHtml from "react-native-render-html";
 import { useWindowDimensions } from "react-native";
 
-
 const Schedule = ({ route, navigation }) => {
   const { eventId, groupId, groupName, eventName } = route.params;
   const { events } = useContext(AuthContext);
@@ -44,7 +43,7 @@ const Schedule = ({ route, navigation }) => {
   useEffect(() => {
     if (!selectedDate && schedule && Object.keys(schedule).length > 0) {
       const firstAvailableDay = Object.keys(schedule)
-        .filter(date => schedule[date] && schedule[date].length > 0)
+        .filter((date) => schedule[date] && schedule[date].length > 0)
         .sort()[0];
       if (firstAvailableDay) {
         setSelectedDate(firstAvailableDay);
@@ -57,22 +56,8 @@ const Schedule = ({ route, navigation }) => {
     navigation.setOptions({
       title: `Agenda - ${groupName}`,
       headerBackTitle: "Grupos",
-      headerRight: () => (
-        <TouchableOpacity
-          onPress={() => {
-            Alert.alert(
-              "Información",
-              `Mostrando agenda del grupo: ${groupName}\nEvento: ${eventName || eventSelected?.name || eventSelected?.nombre}`,
-              [{ text: "OK" }],
-            );
-          }}
-          style={{ marginRight: 10 }}
-        >
-          <Ionicons name="information-circle-outline" size={24} color="white" />
-        </TouchableOpacity>
-      ),
     });
-  }, [groupName, eventName, eventSelected]);
+  }, [groupName]);
 
   async function getSchedule() {
     try {
@@ -83,6 +68,7 @@ const Schedule = ({ route, navigation }) => {
 
       if (data && Object.keys(data).length > 0) {
         setSchedule(data);
+        console.log("Agenda cargada:", data);
       } else {
         setSchedule({});
         setError("No hay actividades programadas para este grupo");
@@ -107,7 +93,6 @@ const Schedule = ({ route, navigation }) => {
     setSelectedEvent(null);
   };
 
-
   if (loading) {
     return <LoadingOverlay />;
   }
@@ -126,10 +111,9 @@ const Schedule = ({ route, navigation }) => {
     );
   }
 
-
   // Función auxiliar para crear fecha local sin problemas de zona horaria
   const createLocalDate = (dateString) => {
-    const [year, month, day] = dateString.split('-').map(Number);
+    const [year, month, day] = dateString.split("-").map(Number);
     return new Date(year, month - 1, day);
   };
 
@@ -139,12 +123,13 @@ const Schedule = ({ route, navigation }) => {
     const formatted = date.toLocaleDateString("es-ES", {
       weekday: "long",
       day: "numeric",
-      month: "long"
+      month: "long",
     });
-    
+
     // Capitalizar la primera letra del día y del mes
-    return formatted.replace(/^(\w)/, (match) => match.toUpperCase())
-                   .replace(/(\s+de\s+)(\w)/, (match, p1, p2) => p1 + p2.toUpperCase());
+    return formatted
+      .replace(/^(\w)/, (match) => match.toUpperCase())
+      .replace(/(\s+de\s+)(\w)/, (match, p1, p2) => p1 + p2.toUpperCase());
   };
 
   // Formatear hora para mostrar
@@ -159,8 +144,8 @@ const Schedule = ({ route, navigation }) => {
   const getTodayDateString = () => {
     const today = new Date();
     const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, '0');
-    const day = String(today.getDate()).padStart(2, '0');
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   };
 
@@ -173,17 +158,19 @@ const Schedule = ({ route, navigation }) => {
     const todayString = getTodayDateString();
 
     return Object.keys(schedule)
-      .filter(date => schedule[date] && schedule[date].length > 0)
+      .filter((date) => schedule[date] && schedule[date].length > 0)
       .sort()
-      .map(date => {
+      .map((date) => {
         const localDate = createLocalDate(date);
         return {
           date,
           events: schedule[date],
           dayNumber: localDate.getDate(),
-          monthName: localDate.toLocaleDateString("es-ES", { month: "short" }).replace(/^(\w)/, (match) => match.toUpperCase()),
+          monthName: localDate
+            .toLocaleDateString("es-ES", { month: "short" })
+            .replace(/^(\w)/, (match) => match.toUpperCase()),
           fullDisplayDate: formatDateForDisplay(date),
-          isToday: date === todayString
+          isToday: date === todayString,
         };
       });
   };
@@ -199,7 +186,9 @@ const Schedule = ({ route, navigation }) => {
   };
 
   const selectedDayEvents = getSelectedDayEvents();
-  const selectedDayInfo = availableDays.find(day => day.date === selectedDate);
+  const selectedDayInfo = availableDays.find(
+    (day) => day.date === selectedDate,
+  );
 
   return (
     <View style={styles.container}>
@@ -207,7 +196,7 @@ const Schedule = ({ route, navigation }) => {
         <>
           {/* Day Picker Horizontal */}
           <View style={styles.dayPickerContainer}>
-            <ScrollView 
+            <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.dayPickerContent}
@@ -218,29 +207,38 @@ const Schedule = ({ route, navigation }) => {
                   style={[
                     styles.dayPickerItem,
                     selectedDate === day.date && styles.dayPickerItemSelected,
-                    day.isToday && styles.dayPickerItemToday
+                    day.isToday && styles.dayPickerItemToday,
                   ]}
                   onPress={() => setSelectedDate(day.date)}
                   activeOpacity={0.7}
                 >
-                  <Text style={[
-                    styles.dayPickerMonth,
-                    selectedDate === day.date && styles.dayPickerTextSelected
-                  ]}>
+                  <Text
+                    style={[
+                      styles.dayPickerMonth,
+                      selectedDate === day.date && styles.dayPickerTextSelected,
+                    ]}
+                  >
                     {day.monthName}
                   </Text>
-                  <Text style={[
-                    styles.dayPickerDay,
-                    selectedDate === day.date && styles.dayPickerTextSelected,
-                    day.isToday && selectedDate !== day.date && styles.dayPickerTodayText
-                  ]}>
+                  <Text
+                    style={[
+                      styles.dayPickerDay,
+                      selectedDate === day.date && styles.dayPickerTextSelected,
+                      day.isToday &&
+                        selectedDate !== day.date &&
+                        styles.dayPickerTodayText,
+                    ]}
+                  >
                     {day.dayNumber}
                   </Text>
                   {day.isToday && (
-                    <View style={[
-                      styles.todayIndicator,
-                      selectedDate === day.date && styles.todayIndicatorSelected
-                    ]} />
+                    <View
+                      style={[
+                        styles.todayIndicator,
+                        selectedDate === day.date &&
+                          styles.todayIndicatorSelected,
+                      ]}
+                    />
                   )}
                 </TouchableOpacity>
               ))}
@@ -254,13 +252,14 @@ const Schedule = ({ route, navigation }) => {
                 {selectedDayInfo.fullDisplayDate}
               </Text>
               <Text style={styles.selectedDayCount}>
-                {selectedDayEvents.length} {selectedDayEvents.length === 1 ? 'actividad' : 'actividades'}
+                {selectedDayEvents.length}{" "}
+                {selectedDayEvents.length === 1 ? "actividad" : "actividades"}
               </Text>
             </View>
           )}
 
           {/* Events List for Selected Day */}
-          <ScrollView 
+          <ScrollView
             style={styles.eventsScrollContainer}
             contentContainerStyle={styles.eventsScrollContent}
             showsVerticalScrollIndicator={false}
@@ -288,14 +287,21 @@ const Schedule = ({ route, navigation }) => {
                     <View style={styles.timeContainer}>
                       <Ionicons name="time-outline" size={16} color="#666" />
                       <Text style={styles.timeText}>
-                        {formatTime(event.startDate)} - {formatTime(event.endDate)}
+                        {formatTime(event.startDate)} -{" "}
+                        {formatTime(event.endDate)}
                       </Text>
                     </View>
 
                     {event.location && (
                       <View style={styles.locationContainer}>
-                        <Ionicons name="location-outline" size={16} color="#666" />
-                        <Text style={styles.locationText}>{event.location}</Text>
+                        <Ionicons
+                          name="location-outline"
+                          size={16}
+                          color="#666"
+                        />
+                        <Text style={styles.locationText}>
+                          {event.location}
+                        </Text>
                       </View>
                     )}
                   </View>

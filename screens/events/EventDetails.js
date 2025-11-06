@@ -111,7 +111,18 @@ const EventDetails = ({ route, navigation }) => {
           {/* {renderButton(appMenu.alimentos, 'restaurant-sharp', 'Alimentos', 'foodInfo')} */}
           {/* {renderButton(appMenu.codigoVestimenta, 'shirt-sharp', 'Código de Vestimenta', 'dressCode')} */}
           {/* {renderButton(appMenu.atencionMedica, 'medkit', 'Atención Médica', 'health')} */}
-          {/* {renderButton(appMenu.encuestas, 'clipboard-sharp', 'Encuestas', 'surveys')} */}
+          {renderButton(
+            appMenu.encuestas,
+            "clipboard-sharp",
+            "Encuestas",
+            "groupSelector",
+            () => {
+              navigation.navigate("groupSelector", {
+                eventId: eventId,
+                mode: "survey",
+              });
+            },
+          )}
 
           {/* Botón de Información General siempre visible */}
           <IconButton
@@ -216,4 +227,3 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
   },
 });
-

@@ -12,6 +12,8 @@ import GroupSelector from "../screens/events/GroupSelector";
 import HotelDetails from "../screens/events/HotelDetails";
 import Transport from "../screens/events/Transport";
 import HealthCare from "../screens/events/HealthCare";
+import SurveyList from "../screens/events/SurveyList";
+import SurveyForm from "../screens/events/SurveyForm";
 
 
 const Stack = createNativeStackNavigator();
@@ -30,6 +32,8 @@ const EventStack = () => {
                 <Stack.Screen name="hotel" component={HotelDetails} options={{title: 'Hotel'}} />
                 <Stack.Screen name="transport" component={Transport} options={{title: 'Transportes'}} />
                 <Stack.Screen name="health" component={HealthCare} options={{title: 'Emergencias'}} />
+                <Stack.Screen name="surveyList" component={SurveyList} options={{title: 'Encuestas'}} />
+                <Stack.Screen name="surveyForm" component={SurveyForm} options={{title: 'Encuesta'}} />
             </Stack.Navigator>
         </UserContextProvider>
     )
