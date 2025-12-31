@@ -2,7 +2,7 @@
   "expo": {
     "name": "SanferEventsApp",
     "slug": "sanferevents",
-    "version": "1.2.7",
+    "version": "1.2.8",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -15,7 +15,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.alferio94.sanferevents",
-      "buildNumber": "1.2.7",
+      "buildNumber": "1.2.8",
       "infoPlist": {
         "NSFaceIDUsageDescription": "Esta aplicación utiliza Face ID para autenticación biométrica y acceso seguro a tu cuenta.",
         "ITSAppUsesNonExemptEncryption": false
@@ -27,7 +27,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.alferio94.sanferevents",
-      "versionCode": 127,
+      "versionCode": 128,
       "permissions": ["USE_FINGERPRINT", "USE_BIOMETRIC"]
     },
     "web": {
@@ -39,7 +39,7 @@
       }
     },
     "owner": "alferio94",
-    "runtimeVersion": "1.2.7",
+    "runtimeVersion": "1.2.8",
     "updates": {
       "url": "https://u.expo.dev/a539242e-509d-4715-a9d6-6befd69eda04"
     },
