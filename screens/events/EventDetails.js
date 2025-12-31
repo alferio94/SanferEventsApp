@@ -107,7 +107,7 @@ const EventDetails = ({ route, navigation }) => {
               });
             },
           )}
-          {/* {renderButton(appMenu.hotel, 'bed-sharp', 'Hotel', 'hotel')} */}
+          {renderButton(appMenu.hotel, "bed-sharp", "Hotel", "hotel")}
           {/* {renderButton(appMenu.alimentos, 'restaurant-sharp', 'Alimentos', 'foodInfo')} */}
           {/* {renderButton(appMenu.codigoVestimenta, 'shirt-sharp', 'Código de Vestimenta', 'dressCode')} */}
           {/* {renderButton(appMenu.atencionMedica, 'medkit', 'Atención Médica', 'health')} */}
