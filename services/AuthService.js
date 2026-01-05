@@ -192,7 +192,7 @@ class AuthService {
     }
   }
 
-  // Configurar autenticación biométrica
+  // Configurar autenticación biométrica (sin validación de contraseña)
   async setupBiometricAuthentication(email, password) {
     try {
       // Verificar si la biometría está disponible
@@ -227,7 +227,7 @@ class AuthService {
                     // Guardar credenciales y habilitar biometría
                     await this.saveCredentials(email, password);
                     await this.setBiometricEnabled(true);
-                    
+
                     Alert.alert(
                       'Éxito',
                       'Autenticación biométrica habilitada correctamente',
@@ -252,6 +252,38 @@ class AuthService {
       });
     } catch (error) {
       return false;
+    }
+  }
+
+  // Habilitar biometría validando contraseña primero
+  async enableBiometricWithPassword(email, password) {
+    try {
+      // 1. Validar credenciales haciendo login
+      const loginResult = await login({ email, password });
+
+      if (!loginResult || !loginResult.user) {
+        return { success: false, error: 'Contraseña incorrecta' };
+      }
+
+      // 2. Verificar si la biometría está disponible
+      const supported = await this.isBiometricSupported();
+      if (!supported) {
+        return { success: false, error: 'Biometría no disponible en este dispositivo' };
+      }
+
+      // 3. Autenticar con biometría para confirmar
+      const authSuccess = await this.authenticateWithBiometrics();
+      if (!authSuccess) {
+        return { success: false, error: 'Autenticación biométrica cancelada' };
+      }
+
+      // 4. Guardar credenciales y habilitar biometría
+      await this.saveCredentials(email, password);
+      await this.setBiometricEnabled(true);
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message || 'Error desconocido' };
     }
   }
 
@@ -284,8 +316,8 @@ class AuthService {
   async disableBiometric() {
     try {
       await this.setBiometricEnabled(false);
-      // Opcionalmente también eliminar credenciales guardadas
-      // await this.removeSavedCredentials();
+      // Eliminar credenciales guardadas por seguridad
+      await SecureStore.deleteItemAsync(USER_CREDENTIALS_KEY);
       return true;
     } catch (error) {
       return false;

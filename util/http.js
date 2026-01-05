@@ -88,6 +88,7 @@ export async function login(userData) {
     await SecureStore.setItemAsync("accessToken", accessToken);
     await SecureStore.setItemAsync("refreshToken", refreshToken);
     await SecureStore.setItemAsync("userId", user.id);
+
     return { user, accessToken, refreshToken };
   } catch (error) {
     return null;

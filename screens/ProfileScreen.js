@@ -7,21 +7,28 @@ import {
   ScrollView,
   TouchableOpacity,
   Linking,
+  TextInput,
+  Modal,
+  Platform,
 } from "react-native";
 import { useContext, useState } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { showToast } from "../util/toast";
 import { Ionicons } from "@expo/vector-icons";
 import { GlobalStyles } from "../constants/styles";
+import AuthService from "../services/AuthService";
 
 const ProfileScreen = () => {
   const authCntx = useContext(AuthContext);
   const [isTogglingBiometric, setIsTogglingBiometric] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [password, setPassword] = useState("");
 
   async function toggleBiometric() {
     setIsTogglingBiometric(true);
     try {
       if (authCntx.isBiometricEnabled) {
+        // Deshabilitar biometría
         const result = await authCntx.disableBiometric();
         if (result) {
           showToast(
@@ -33,19 +40,25 @@ const ProfileScreen = () => {
           showToast("error", "Error", "No se pudo desactivar la biometría");
         }
       } else {
-        const result = await authCntx.enableBiometric();
-        if (result) {
-          showToast(
-            "success",
-            "Biometría habilitada",
-            "Ahora puedes acceder con tu huella o Face ID",
-          );
+        // Habilitar biometría - verificar si hay credenciales guardadas
+        const credentials = await AuthService.getSavedCredentials();
+
+        if (credentials) {
+          // Tiene credenciales, puede habilitar directamente
+          const result = await authCntx.enableBiometric();
+          if (result) {
+            showToast(
+              "success",
+              "Biometría habilitada",
+              "Ahora puedes acceder con tu huella o Face ID",
+            );
+          } else {
+            showToast("error", "Error", "No se pudo activar la biometría");
+          }
         } else {
-          showToast(
-            "error",
-            "Error",
-            "No se pudo activar la biometría. Asegúrate de tener credenciales guardadas.",
-          );
+          // No tiene credenciales, pedir contraseña
+          setIsTogglingBiometric(false); // Desactivar loading antes de mostrar prompt
+          requestPasswordForBiometric();
         }
       }
     } catch (error) {
@@ -54,6 +67,58 @@ const ProfileScreen = () => {
         "Error",
         "No se pudo cambiar la configuración biométrica",
       );
+    } finally {
+      setIsTogglingBiometric(false);
+    }
+  }
+
+  function requestPasswordForBiometric() {
+    setPassword("");
+    setShowPasswordModal(true);
+  }
+
+  function handleCancelPasswordModal() {
+    setShowPasswordModal(false);
+    setPassword("");
+  }
+
+  async function handleConfirmPassword() {
+    if (!password || password.trim() === "") {
+      showToast("error", "Error", "Debes ingresar tu contraseña");
+      return;
+    }
+
+    setShowPasswordModal(false);
+    await enableBiometricWithPassword(password);
+    setPassword("");
+  }
+
+  async function enableBiometricWithPassword(password) {
+    setIsTogglingBiometric(true);
+    try {
+      const result = await AuthService.enableBiometricWithPassword(
+        authCntx.user.email,
+        password,
+      );
+
+      if (result.success) {
+        // Actualizar estado biométrico en el contexto
+        await authCntx.refreshBiometricStatus();
+
+        showToast(
+          "success",
+          "Biometría habilitada",
+          "Ahora puedes acceder con tu huella o Face ID",
+        );
+      } else {
+        showToast(
+          "error",
+          "Error",
+          result.error || "No se pudo habilitar biometría",
+        );
+      }
+    } catch (error) {
+      showToast("error", "Error", "No se pudo habilitar la biometría");
     } finally {
       setIsTogglingBiometric(false);
     }
@@ -244,6 +309,58 @@ const ProfileScreen = () => {
 
       {/* Espaciado inferior */}
       <View style={styles.bottomSpacing} />
+
+      {/* Modal para ingresar contraseña */}
+      <Modal
+        visible={showPasswordModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCancelPasswordModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Ionicons
+                name="shield-checkmark"
+                size={40}
+                color={GlobalStyles.primary500}
+              />
+              <Text style={styles.modalTitle}>Confirma tu identidad</Text>
+              <Text style={styles.modalDescription}>
+                Ingresa tu contraseña para habilitar la autenticación biométrica
+              </Text>
+            </View>
+
+            <View style={styles.modalBody}>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Contraseña"
+                secureTextEntry={true}
+                value={password}
+                onChangeText={setPassword}
+                autoFocus={true}
+                autoCapitalize="none"
+              />
+            </View>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={handleCancelPasswordModal}
+              >
+                <Text style={styles.cancelButtonText}>Cancelar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalButton, styles.confirmButton]}
+                onPress={handleConfirmPassword}
+              >
+                <Text style={styles.confirmButtonText}>Confirmar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -416,6 +533,83 @@ const styles = StyleSheet.create({
   },
   bottomSpacing: {
     height: 30,
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    backgroundColor: "white",
+    borderRadius: 20,
+    width: "85%",
+    maxWidth: 400,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 5,
+    elevation: 8,
+  },
+  modalHeader: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  modalDescription: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    paddingHorizontal: 10,
+  },
+  modalBody: {
+    marginBottom: 20,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: "#e1e5e9",
+    borderRadius: 12,
+    padding: 15,
+    fontSize: 16,
+    backgroundColor: "#f8f9fa",
+  },
+  modalFooter: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  cancelButton: {
+    backgroundColor: "#f1f3f5",
+  },
+  confirmButton: {
+    backgroundColor: GlobalStyles.primary500 || "#007AFF",
+  },
+  cancelButtonText: {
+    color: "#666",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  confirmButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
 
